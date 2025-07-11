@@ -1,0 +1,9 @@
+*.xml
+*.exe
+*.pyc
+*.dll
+*.html
+/Manipulador de PDF - Tess/configs/tess
+/Manipulador de PDF - Tess/configs/creds
+/.idea
+*.iml
