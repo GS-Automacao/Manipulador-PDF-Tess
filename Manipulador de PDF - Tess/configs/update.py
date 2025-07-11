@@ -1,17 +1,17 @@
-import requests
-import zipfile
-import os
 from io import BytesIO
 from time import sleep
+import requests
+import zipfile
 
-# Configurações do seu repositório
+
+# Configurações do repositório
 OWNER = "GS-Luiz-Gustavo-Queiroz"
-REPO = "GS_Automacao"
+REPO = "Manipulador-PDF---Tess"
 
 def baixar_release_mais_recente():
     url_api = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/latest"
 
-    print(f"Consultando a versão mais recente de {OWNER}/{REPO}...")
+    print(f"Consultando a versão mais recente do robô...")
     response = requests.get(url_api)
     if response.status_code != 200:
         raise Exception(f"Erro ao consultar release: {response.status_code}")

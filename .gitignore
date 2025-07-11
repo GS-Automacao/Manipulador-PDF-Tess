@@ -7,3 +7,7 @@
 /Manipulador de PDF - Tess/configs/creds
 /.idea
 *.iml
+/build
+/dist
+*.spec
+*.txt

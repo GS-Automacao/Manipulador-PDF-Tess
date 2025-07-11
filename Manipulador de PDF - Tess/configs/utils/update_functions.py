@@ -11,22 +11,14 @@ def check_update(VERSION: str):
 
 
 def get_last_version():
-    # Endpoint da API para buscar o histórico de commits de um arquivo específico.
-    url = "https://api.github.com/repos/GS-Luiz-Gustavo-Queiroz/GS_Automacao/commits"
-    # Parâmetros da consulta, para buscar commits de um arquivo específico
-    params = {'path': "GS/Operacoes em PDF/_Manipulador de PDF - Tess/main.exe"}
-    try:
-        # Envia a requisição GET para a API do GitHub
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Levanta uma exceção se houver um erro na requisição
-        # Extrai o JSON da resposta
-        commits_data = response.json()
-        if commits_data:
-            # A mensagem do commit mais recente está no primeiro item da lista
-            last_commit = commits_data[0]
-            commit_message = last_commit['commit']['message']
-            return commit_message
-        else:
-            return None
-    except requests.exceptions.RequestException:
-        return None
+    OWNER = "GS-Luiz-Gustavo-Queiroz"
+    REPO = "Manipulador-PDF---Tess"
+    url_api = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/latest"
+
+    response = requests.get(url_api)
+    if response.status_code != 200:
+        raise Exception(f"Erro ao consultar release: {response.status_code}")
+
+    release = response.json()
+    tag = release['tag_name']
+    return tag

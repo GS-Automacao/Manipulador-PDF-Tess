@@ -4,7 +4,7 @@ import pytesseract
 
 pytesseract.pytesseract.tesseract_cmd = 'configs/tess/tesseract.exe'
 
-VERSION: str = '1.0.1'
+VERSION: str = 'v1.0.1'
 
 
 
