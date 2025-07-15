@@ -7,6 +7,7 @@ from .f04 import f04
 from .f05 import f05
 from .f06 import f06
 from .f07 import f07
+from .f08 import f08
 
 # Caminho do diretório onde este __init__.py está.
 diretorio = pathlib.Path(__file__).parent
@@ -21,5 +22,6 @@ NAMES = {
     4: 'NFs Sorocaba',
     5: 'NFs Vitória',
     6: 'NFs Vila Velha',
-    7: 'Rendimentos Dirf'
+    7: 'Rendimentos Dirf',
+    8: 'NFs São Paulo'
 }
