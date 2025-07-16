@@ -23,5 +23,5 @@ NAMES = {
     5: 'NFs Vitória',
     6: 'NFs Vila Velha',
     7: 'Rendimentos Dirf',
-    8: 'NFs São Paulo'
+    8: 'NFs São-Paulo'
 }

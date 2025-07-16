@@ -16,7 +16,12 @@ all_sizes = {'Curitiba':   {(612, 792): [(125, 240, 350, 255), (505,  52, 535,  
                             (595, 842): [(110, 235, 380, 255), (520,  30, 550,  45)]},
              'Salvador':   {(595, 842): [( 10, 198, 250, 208), (445,  22, 500,  32)]},
              'Sorocaba':   {(595, 842): [(135, 300, 370, 310), (260, 108, 276, 116)]},
-             'Vitória':    {(596, 842): [(110, 255, 400, 270), (405,  38, 450,  50)]}}
+             'Vitória':    {(596, 842): [(110, 255, 400, 270), (405,  38, 450,  50)]},
+
+             'São-Paulo':  {'modelo1': [(100, 185, 575, 200), (66, 200, 340, 212)],
+                            'modelo2': [(133, 185, 530, 196), (105, 196, 335, 207)]}
+            
+            }
 
 
 def extract_text(path: str, config='--psm 10') -> str:
@@ -60,6 +65,33 @@ def pdf_to_img(path: str, sizes: Dict, page: int = 0) -> None:
     nome.save('nome.jpg')
     num_nf.save('num_nf.jpg')
 
+def tratar_tamanho_corte_sao_paulo(recorte):
+    recorte = list(recorte)
+    for pos in range(0, len(recorte)):
+        recorte[pos] = recorte[pos] * 2
+    
+    recorte = tuple(recorte)
+    return recorte
+
+def pdf_to_img_sao_paulo(path: str, sizes: Dict, page: int = 0) -> None:
+    pdf_document = fitz.open(path)  # Abre a Nota Fiscal.
+    page = pdf_document.load_page(page)  # Carrega a página.
+    image = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Converte a página num objeto de imagem.
+    image.save('img.jpg')  # Salva a imagem num arquivo.
+    pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
+    image = Image.open('img.jpg')
+    # if image.size in sizes:
+    nome = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo1'][0]))
+    cnpj = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo1'][1]))
+    nome2 = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo2'][0]))
+    cnpj2 = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo2'][1]))
+    # else:
+        # raise TypeError()
+    nome.save('nome.jpg')
+    cnpj.save('cnpj.jpg')
+    nome2.save('nome2.jpg')
+    cnpj2.save('cnpj2.jpg')
+
 
 
 def processa_nfs(cidade: str, files: List[str] = []) -> int:
@@ -90,6 +122,55 @@ def processa_nfs(cidade: str, files: List[str] = []) -> int:
         os.remove('img.jpg')
         os.remove('nome.jpg')
         os.remove('num_nf.jpg')
+    except FileNotFoundError:
+        pass
+
+    return tot_pags
+
+
+def processa_nfs_sao_paulo(cidade: str, files: List[str] = []) -> int:
+    tot_pags: int = 0
+    sizes = all_sizes.get(cidade, None)
+    # Verifica se a cidade foi encontrada.
+    if sizes is None:
+        raise TypeError('Cidade não cadastrada.')
+    # Lista as NFs no diretório.
+    if not files:
+        files = [file for file in os.listdir() if '.pdf' in file.lower()]
+
+    print(cidade)
+    sleep(0.1)
+    # Renomeia as notas.
+    for file in tqdm(files):
+        try:
+            pdf_to_img_sao_paulo(file, sizes)
+        except TypeError:
+            continue
+        nome: str = extract_text('nome.jpg', config='--psm 7').strip()
+        cnpj: str = extract_text('cnpj.jpg', config='--psm 7 -c tessedit_char_whitelist=0123456789').strip()
+        nome2: str = extract_text('nome2.jpg', config='--psm 7').strip()
+        cnpj2: str = extract_text('cnpj2.jpg', config='--psm 7 -c tessedit_char_whitelist=0123456789').strip()
+
+        #buscar qual dos dois cnpjs foi extraido corretamente
+        cnpj = cnpj.replace(".", "").replace("/", "").replace("-", "")
+        cnpj2 = cnpj2.replace(".", "").replace("/", "").replace("-", "")
+
+        if(len(cnpj) == 14):
+            pass
+        elif len(cnpj2) == 14:
+            nome = nome2
+            cnpj = cnpj2
+
+        novo_nome = f'NF {nome} - {cnpj}.pdf'
+        shutil.move(file, novo_nome)
+        
+    try:
+        # Apaga as imagens residuais.
+        os.remove('img.jpg')
+        os.remove('nome.jpg')
+        os.remove('nome2.jpg')
+        os.remove('cnpj.jpg')
+        os.remove('cnpj2.jpg')
     except FileNotFoundError:
         pass
 
