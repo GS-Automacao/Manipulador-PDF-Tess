@@ -1,4 +1,4 @@
-from .functions import (f01, f02, f03, f04, f05, f06, f07,
+from .functions import (f01, f02, f03, f04, f05, f06, f07, f08,
                         N_FUNCTIONS, NAMES)
 from .report_functions import salva_relatorio
 from datetime import datetime
