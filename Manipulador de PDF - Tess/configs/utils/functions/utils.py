@@ -13,7 +13,8 @@ import os
 pytesseract.pytesseract.tesseract_cmd = 'configs/tess/tesseract.exe'
 
 all_sizes = {'Curitiba':   {(612, 792): [(125, 240, 350, 255), (505,  52, 535,  63)],
-                            (595, 842): [(110, 235, 380, 255), (520,  30, 550,  45)]},
+                            (596, 842): [(110, 235, 380, 255), (520,  30, 550,  45)],
+                            (842, 1192): [(122, 232, 550, 242), (122, 250, 220, 262)]},
              'Salvador':   {(595, 842): [( 10, 198, 250, 208), (445,  22, 500,  32)]},
              'Sorocaba':   {(595, 842): [(135, 300, 370, 310), (260, 108, 276, 116)]},
              'Vitória':    {(596, 842): [(110, 255, 400, 270), (405,  38, 450,  50)]},
@@ -53,19 +54,38 @@ def pdf_split(path: str) -> None:
 def pdf_to_img(path: str, sizes: Dict, page: int = 0) -> None:
     pdf_document = fitz.open(path)  # Abre a Nota Fiscal.
     page = pdf_document.load_page(page)  # Carrega a página.
-    image = page.get_pixmap()  # Converte a página num objeto de imagem.
+    image = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Converte a página num objeto de imagem.
     image.save('img.jpg')  # Salva a imagem num arquivo.
     pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
     image = Image.open('img.jpg')
+
+    #EXCLUIR DPS
+    print(image.size)
+    print(sizes)
+
     if image.size in sizes:
         nome = image.crop(sizes[image.size][0])
         num_nf = image.crop(sizes[image.size][1])
     else:
         raise TypeError()
+    
     nome.save('nome.jpg')
     num_nf.save('num_nf.jpg')
 
-def tratar_tamanho_corte_sao_paulo(recorte):
+def tratar_tamanho_corte(recorte: tuple):
+    """
+    Essa função é responsável por dobrar
+    o valor das coordenadas de corte
+    caso a dimensão da pagina seja dobrada.
+    Então continuará capturando a informação
+    de maneira proporcional.
+
+    Args:
+        parametro1: 4-tupla com as posições do corte.
+    
+    Returns:
+        A 4-tupla com os valores dobrados.
+    """
     recorte = list(recorte)
     for pos in range(0, len(recorte)):
         recorte[pos] = recorte[pos] * 2
@@ -81,10 +101,10 @@ def pdf_to_img_sao_paulo(path: str, sizes: Dict, page: int = 0) -> None:
     pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
     image = Image.open('img.jpg')
     # if image.size in sizes:
-    nome = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo1'][0]))
-    cnpj = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo1'][1]))
-    nome2 = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo2'][0]))
-    cnpj2 = image.crop(tratar_tamanho_corte_sao_paulo(sizes['modelo2'][1]))
+    nome = image.crop(tratar_tamanho_corte(sizes['modelo1'][0]))
+    cnpj = image.crop(tratar_tamanho_corte(sizes['modelo1'][1]))
+    nome2 = image.crop(tratar_tamanho_corte(sizes['modelo2'][0]))
+    cnpj2 = image.crop(tratar_tamanho_corte(sizes['modelo2'][1]))
     # else:
         # raise TypeError()
     nome.save('nome.jpg')
@@ -113,9 +133,9 @@ def processa_nfs(cidade: str, files: List[str] = []) -> int:
         except TypeError:
             continue
         nome: str = extract_text('nome.jpg', config='--psm 7').strip()
-        num_nf: str = extract_text('num_nf.jpg', config='--psm 13 -c tessedit_char_whitelist=0123456789').strip()
+        cnpj: str = extract_text('num_nf.jpg', config='--psm 7 -c tessedit_char_whitelist=0123456789').strip()
 
-        novo_nome = f'NF {num_nf[-4:]} - {nome}.pdf'
+        novo_nome = f'{nome} - {cnpj} NF.pdf'
         shutil.move(file, novo_nome)
     try:
         # Apaga as imagens residuais.
@@ -161,7 +181,7 @@ def processa_nfs_sao_paulo(cidade: str, files: List[str] = []) -> int:
             nome = nome2
             cnpj = cnpj2
 
-        novo_nome = f'NF {nome} - {cnpj}.pdf'
+        novo_nome = f'{nome} - {cnpj} NF.pdf'
         shutil.move(file, novo_nome)
         
     try:
