@@ -63,9 +63,14 @@ def pdf_to_img(path: str, sizes: Dict, page: int = 0) -> None:
     print(image.size)
     print(sizes)
 
+    #aqui vamos capturar o tamanho da imagem
+    #e dividir por 2 retornando uma dupla(altura, comprimento)
+    #para verificar se o tamanho original
+    #está nas dimensões existentes
+
     if image.size in sizes:
-        nome = image.crop(sizes[image.size][0])
-        num_nf = image.crop(sizes[image.size][1])
+        nome = image.crop(tratar_tamanho_corte(sizes[image.size][0]))
+        num_nf = image.crop(tratar_tamanho_corte(sizes[image.size][1]))
     else:
         raise TypeError()
     

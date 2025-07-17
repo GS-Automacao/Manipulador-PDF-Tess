@@ -20,4 +20,5 @@ for arquivo in arquivos:
     image.save(f'img{i}.jpg')  # Salva a imagem num arquivo.
     pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
     image = Image.open(f'img{i}.jpg')
+    print(image.size)
     i+=1
