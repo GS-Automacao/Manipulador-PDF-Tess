@@ -13,8 +13,8 @@ import os
 pytesseract.pytesseract.tesseract_cmd = 'configs/tess/tesseract.exe'
 
 all_sizes = {'Curitiba':   {(612, 792): [(125, 240, 350, 255), (505,  52, 535,  63)],
-                            (596, 842): [(110, 235, 380, 255), (520,  30, 550,  45)],
-                            (842, 1192): [(122, 232, 550, 242), (122, 250, 220, 262)]},
+                            (596, 842): [(86, 164, 380, 172), (86, 176, 160, 186)],
+                            (842, 1192): [(122, 232, 550, 244), (122, 250, 220, 262)]},
              'Salvador':   {(595, 842): [( 10, 198, 250, 208), (445,  22, 500,  32)]},
              'Sorocaba':   {(595, 842): [(135, 300, 370, 310), (260, 108, 276, 116)]},
              'Vitória':    {(596, 842): [(110, 255, 400, 270), (405,  38, 450,  50)]},
@@ -51,32 +51,6 @@ def pdf_split(path: str) -> None:
                     writer.write(output)
 
 
-def pdf_to_img(path: str, sizes: Dict, page: int = 0) -> None:
-    pdf_document = fitz.open(path)  # Abre a Nota Fiscal.
-    page = pdf_document.load_page(page)  # Carrega a página.
-    image = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Converte a página num objeto de imagem.
-    image.save('img.jpg')  # Salva a imagem num arquivo.
-    pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
-    image = Image.open('img.jpg')
-
-    #EXCLUIR DPS
-    print(image.size)
-    print(sizes)
-
-    #aqui vamos capturar o tamanho da imagem
-    #e dividir por 2 retornando uma dupla(altura, comprimento)
-    #para verificar se o tamanho original
-    #está nas dimensões existentes
-
-    if image.size in sizes:
-        nome = image.crop(tratar_tamanho_corte(sizes[image.size][0]))
-        num_nf = image.crop(tratar_tamanho_corte(sizes[image.size][1]))
-    else:
-        raise TypeError()
-    
-    nome.save('nome.jpg')
-    num_nf.save('num_nf.jpg')
-
 def tratar_tamanho_corte(recorte: tuple):
     """
     Essa função é responsável por dobrar
@@ -97,6 +71,33 @@ def tratar_tamanho_corte(recorte: tuple):
     
     recorte = tuple(recorte)
     return recorte
+
+
+def pdf_to_img(path: str, sizes: Dict, page: int = 0) -> None:
+    #a imagem2 é apenas para capturar as dimensões originais
+    pdf_document = fitz.open(path)  # Abre a Nota Fiscal.
+    page = pdf_document.load_page(page)  # Carrega a página.
+    image = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Converte a página num objeto de imagem.
+    image2 = page.get_pixmap()  # Converte a página num objeto de imagem.
+    image.save('img.jpg')  # Salva a imagem num arquivo.
+    image2.save('img2.jpg')  # Salva a imagem num arquivo.
+    pdf_document.close()  # Fechar o PDF para garantir que o arquivo seja liberado.
+    image = Image.open('img.jpg')
+    image2 = Image.open('img2.jpg')
+
+    #EXCLUIR DPS
+    # print(tratar_tamanho_imagem(image.size))
+    # print(sizes)
+
+    if image2.size in sizes:
+        nome = image.crop(tratar_tamanho_corte(sizes[image2.size][0]))
+        cnpj = image.crop(tratar_tamanho_corte(sizes[image2.size][1]))
+    else:
+        raise TypeError()
+    
+    nome.save('nome.jpg')
+    cnpj.save('cnpj.jpg')
+
 
 def pdf_to_img_sao_paulo(path: str, sizes: Dict, page: int = 0) -> None:
     pdf_document = fitz.open(path)  # Abre a Nota Fiscal.
@@ -138,7 +139,7 @@ def processa_nfs(cidade: str, files: List[str] = []) -> int:
         except TypeError:
             continue
         nome: str = extract_text('nome.jpg', config='--psm 7').strip()
-        cnpj: str = extract_text('num_nf.jpg', config='--psm 7 -c tessedit_char_whitelist=0123456789').strip()
+        cnpj: str = extract_text('cnpj.jpg', config='--psm 7 -c tessedit_char_whitelist=0123456789').strip()
 
         novo_nome = f'{nome} - {cnpj} NF.pdf'
         shutil.move(file, novo_nome)
@@ -146,7 +147,8 @@ def processa_nfs(cidade: str, files: List[str] = []) -> int:
         # Apaga as imagens residuais.
         os.remove('img.jpg')
         os.remove('nome.jpg')
-        os.remove('num_nf.jpg')
+        os.remove('cnpj.jpg')
+        os.remove('img2.jpg')
     except FileNotFoundError:
         pass
 
