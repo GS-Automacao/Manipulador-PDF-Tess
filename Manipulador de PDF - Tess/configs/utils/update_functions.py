@@ -11,8 +11,8 @@ def check_update(VERSION: str):
 
 
 def get_last_version():
-    OWNER = "GS-Luiz-Gustavo-Queiroz"
-    REPO = "Manipulador-PDF---Tess"
+    OWNER = "GS-Automacao"
+    REPO = "Manipulador-PDF-Tess"
     url_api = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/latest"
 
     response = requests.get(url_api)

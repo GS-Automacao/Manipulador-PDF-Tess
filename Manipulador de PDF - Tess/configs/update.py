@@ -5,8 +5,8 @@ import zipfile
 
 
 # Configurações do repositório
-OWNER = "GS-Luiz-Gustavo-Queiroz"
-REPO = "Manipulador-PDF---Tess"
+OWNER = "GS-Automacao"
+REPO = "Manipulador-PDF-Tess"
 
 def baixar_release_mais_recente():
     url_api = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/latest"
